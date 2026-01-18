@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Based Misinformation Propagation Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="//unpkg.com/3d-force-graph"></script>
+</head>
+
+<body>
+    <!-- Video Background -->
+    <div class="video-container">
+        <video autoplay muted loop id="bg-video">
+            <source src="{{ url_for('static', filename='asd.mp4') }}" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav style="position: absolute; top: 30px; right: 40px; z-index: 100;">
+        <a href="{{ url_for('index') }}"
+            style="text-decoration: none; color: #fff; font-weight: 600; margin-left: 20px;"><i class="fas fa-home"></i>
+            Home</a>
+        <a href="{{ url_for('about') }}"
+            style="text-decoration: none; color: rgba(255,255,255,0.7); font-weight: 600; margin-left: 20px; transition: color 0.3s ease;"
+            onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.7)'"><i
+                class="fas fa-info-circle"></i> About</a>
+    </nav>
+
+    <!-- Main Container -->
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>AI-Based Misinformation Propagation Analyzer</span>
+                </div>
+                <p class="subtitle">Advanced Misinformation Detection & Propagation Analysis System</p>
+            </div>
+        </header>
+
+        <!-- Input Section -->
+        <section class="input-section glass-card animate-enter delay-1">
+            <div class="section-header">
+
+                <h2><i class="fas fa-edit"></i> Analyze News Article</h2>
+                <p>Paste news text or enter a URL to detect misinformation</p>
+            </div>
+
+            <!-- Input Section -->
+            <!-- Input Toggle (Removed) -->
+
+            <!-- Text Input -->
+            <div class="input-container" id="text-input-container">
+                <textarea id="news-text" placeholder="Paste your news article here...
+                
+Example: Breaking news - scientists discover miracle cure that reverses aging completely in just 3 days!"></textarea>
+            </div>
+
+            <!-- Sample Articles -->
+            <div class="sample-section">
+                <p class="sample-label">Try sample articles:</p>
+                <div class="sample-buttons">
+                    <button class="sample-btn" data-type="fake">
+                        <i class="fas fa-times-circle"></i> Fake News Sample
+                    </button>
+                    <button class="sample-btn" data-type="real">
+                        <i class="fas fa-check-circle"></i> Real News Sample
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button class="analyze-btn" id="analyze-btn">
+                <span class="btn-text">
+                    <i class="fas fa-search"></i> Analyze Information
+                </span>
+                <span class="btn-loader hidden">
+                    <i class="fas fa-spinner fa-spin"></i> Analyzing...
+                </span>
+            </button>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section hidden" id="results-section">
+            <!-- Detection Results -->
+            <div class="glass-card result-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-shield-alt"></i> Detection Results</h2>
+                </div>
+
+                <div class="detection-results">
+                    <!-- Main Verdict -->
+                    <div class="verdict-banner" id="verdict-banner">
+                        <div class="verdict-icon" id="verdict-icon"></div>
+                        <div class="verdict-content">
+                            <h3 id="verdict-text">Analyzing...</h3>
+                            <p id="verdict-confidence"></p>
+                        </div>
+                        <button id="scout-btn" class="export-btn"
+                            style="margin-left: auto; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5);"
+                            title="Search for external verification">
+                            <i class="fas fa-binoculars"></i> Scout Evidence
+                        </button>
+                    </div>
+
+                    <!-- Model Comparison -->
+                    <div class="model-grid">
+                        <div class="model-card">
+                            <div class="model-header">
+                                <i class="fas fa-robot"></i>
+                                <span>BERT Model</span>
+                            </div>
+                            <div class="model-result" id="bert-result">
+                                <span class="badge" id="bert-badge">-</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="bert-confidence"></div>
+                                </div>
+                                <span class="confidence-text" id="bert-confidence-text">-</span>
+                            </div>
+                        </div>
+
+                        <div class="model-card">
+                            <div class="model-header">
+                                <i class="fas fa-cog"></i>
+                                <span>SVM Baseline</span>
+                            </div>
+                            <div class="model-result" id="svm-result">
+                                <span class="badge" id="svm-badge">-</span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="svm-confidence"></div>
+                                </div>
+                                <span class="confidence-text" id="svm-confidence-text">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: AI Truth Consultant (Deep Scan) -->
+                <div class="result-card" id="deep-scan-section"
+                    style="margin-top: 20px; border-left: 4px solid #DAF1DE; background: rgba(5, 31, 32, 0.4);">
+                    <div style="padding: 15px;">
+                        <h3
+                            style="font-family: 'Courier New', monospace; color: #8EB69B; margin-top: 0; display: flex; align-items: center;">
+                            <i class="fas fa-microchip" style="margin-right: 10px;"></i> AI TRUTH CONSULTANT REPORT
+                        </h3>
+                        <div id="deep-scan-text"
+                            style="font-family: 'Courier New', monospace; color: #DAF1DE; line-height: 1.6; font-size: 0.95rem;">
+                            <!-- Typewriter text injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explainable AI Section -->
+                <div class="explanation-section" id="explanation-section"
+                    style="display: none; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="font-size: 1.1rem; color: #fff; margin: 0;">
+                            <i class="fas fa-search-plus"></i> Key Indicators (Why?)
+                        </h3>
+                        <!-- PDF Export Button -->
+                        <button id="download-report-btn" class="export-btn"
+                            style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9rem;">
+                            <i class="fas fa-file-pdf"></i> Download Report
+                        </button>
+                    </div>
+
+                    <div id="explanation-words" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <!-- Words injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Propagation Analysis -->
+            <div class="glass-card result-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-project-diagram"></i> Propagation Analysis</h2>
+                    <p>How this information spreads through social networks</p>
+                </div>
+
+                <div class="propagation-metrics">
+                    <div class="metric-card">
+                        <i class="fas fa-fire"></i>
+                        <div class="metric-content">
+                            <span class="metric-value" id="severity-value">-</span>
+                            <span class="metric-label">Spread Severity</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="metric-content">
+                            <span class="metric-value" id="r0-value">-</span>
+                            <span class="metric-label">R0 (Reproduction)</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <i class="fas fa-users"></i>
+                        <div class="metric-content">
+                            <span class="metric-value" id="reach-value">-</span>
+                            <span class="metric-label">Potential Reach</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div class="metric-content">
+                            <span class="metric-value" id="peak-value">-</span>
+                            <span class="metric-label">Peak Day</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizations -->
+            <div class="glass-card result-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-bar"></i> Visual Analysis</h2>
+                    <p>Comprehensive charts and graphs</p>
+                </div>
+
+                <div class="charts-grid">
+                    <!-- Chart 1: Fake vs Real -->
+                    <div class="chart-container">
+                        <h3>Dataset Distribution</h3>
+                        <div id="chart-pie-fake-real" class="plotly-chart"></div>
+                    </div>
+
+
+                    <!-- Chart 2: Model Comparison -->
+                    <div class="chart-container">
+                        <h3>Model Accuracy Comparison</h3>
+                        <div id="chart-bar-comparison" class="plotly-chart"></div>
+                    </div>
+
+
+                    <!-- Chart 3: Processing Pipeline -->
+                    <div class="chart-container">
+                        <h3>Information Processing Pipeline</h3>
+                        <div id="chart-line-pipeline" class="plotly-chart"></div>
+                    </div>
+
+
+                    <!-- Chart 4: SIR Model -->
+                    <div class="chart-container chart-wide">
+                        <h3>SIR Propagation Model</h3>
+                        <div id="chart-sir-model" class="plotly-chart"></div>
+                    </div>
+
+
+                    <!-- Chart 5: Network Graph (3D) -->
+                    <div class="chart-container chart-wide" style="min-height: 500px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3>3D Propagation Network</h3>
+                            <div style="font-size: 0.8rem; color: #aaa;">
+                                <i class="fas fa-mouse"></i> Drag to Rotate | Scroll to Zoom | Click Nodes
+                            </div>
+                        </div>
+                        <div id="3d-graph"
+                            style="width: 100%; height: 450px; background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden;">
+                        </div>
+                    </div>
+
+                    <!-- Chart 6: Influencer Contribution -->
+                    <div class="chart-container">
+                        <h3>Top Influencers Impact</h3>
+                        <div id="chart-pie-influencers" class="plotly-chart"></div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        // Sample articles
+        const samples = {
+            fake: "Breaking: Government officials caught hiding evidence of alien contact in secret warehouse. Anonymous sources claim that world leaders have been meeting with extraterrestrial beings for decades. The truth is finally coming out! Shocking photos reveal classified documents that prove aliens have been influencing world events. Mainstream media won't report this because they're controlled by the deep state. Share this before it gets deleted!",
+            real: "Scientists from the University of California have published new research in the journal Nature Climate Change showing that climate patterns are shifting more rapidly than previously predicted. The study, which analyzed data from over 50 years of atmospheric measurements, suggests that immediate action is needed to address rising global temperatures. The research team emphasized the importance of evidence-based policy decisions."
+        };
+
+        // DOM Elements
+        const newsText = document.getElementById('news-text');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const btnText = analyzeBtn.querySelector('.btn-text');
+        const btnLoader = analyzeBtn.querySelector('.btn-loader');
+        const resultsSection = document.getElementById('results-section');
+        const sampleBtns = document.querySelectorAll('.sample-btn');
+
+        // Sample buttons
+        sampleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                newsText.value = samples[type];
+            });
+        });
+
+        // Fact-Checker Scout
+        document.getElementById('scout-btn').addEventListener('click', () => {
+            const text = newsText.value.trim();
+            if (!text) { alert('No text to scout!'); return; }
+            // Extract first 10-15 words for a search query
+            const query = text.split(/\s+/).slice(0, 15).join(' ');
+            const url = `https://www.google.com/search?q=fact+check+${encodeURIComponent(query)}`;
+            window.open(url, '_blank');
+        });
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', async () => {
+            const inputValue = newsText.value.trim();
+
+            if (!inputValue) {
+                alert('Please provide text to analyze');
+                return;
+            }
+
+            // Show loading state
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            // Update loader text to manage expectations
+            btnLoader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing... (AI models loading)';
+            analyzeBtn.disabled = true;
+
+            try {
+                // Use relative URL to support both 127.0.0.1 and localhost automatically
+                const baseUrl = '';
+                const endpoint = `${baseUrl}/analyze/text`;
+                const payload = { text: inputValue };
+
+                console.log(`Sending request to ${endpoint}...`);
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Analysis failed');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                alert('Error: ' + error.message + '\n\nMake sure the Python server is running on port 5000.');
+            } finally {
+                // Hide loading state
+                btnText.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
+                btnLoader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            // Show results section
+            resultsSection.classList.remove('hidden');
+
+            // Store result for PDF export (closure or global, here we attach directly to btn)
+            const downloadBtn = document.getElementById('download-report-btn');
+            downloadBtn.style.display = 'block';
+
+            // Remove old listener to avoid duplicates (clone node trick)
+            const newBtn = downloadBtn.cloneNode(true);
+            downloadBtn.parentNode.replaceChild(newBtn, downloadBtn);
+
+            newBtn.addEventListener('click', async () => {
+                newBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                newBtn.disabled = true;
+
+                try {
+                    const originalText = document.getElementById('news-text').value;
+                    const response = await fetch('/export/report', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            result: data,
+                            text: originalText
+                        })
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'Misinformation_Report.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                    } else {
+                        alert('Failed to generate report');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error generating PDF');
+                } finally {
+                    newBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download Report';
+                    newBtn.disabled = false;
+                }
+            });
+
+            // Display detection results
+            const bert = data.detection.bert;
+            const svm = data.detection.svm;
+            const verdict = data.detection.final_verdict;
+            const explanation = data.detection.explanation;
+
+            // Display Explanation (XAI)
+            const explanationSection = document.getElementById('explanation-section');
+            const explanationWords = document.getElementById('explanation-words');
+
+            if (explanation && explanation.contributing_words && explanation.contributing_words.length > 0) {
+                explanationSection.style.display = 'block';
+                explanationWords.innerHTML = explanation.contributing_words.map(w => {
+                    // Color code: Positive (Fake) = Red, Negative (Real) = Green/Blue
+                    // However, our backend sorts by absolute contribution logic based on prediction
+                    // If prediction is Fake, words are those contributing to Fake (Red).
+                    // If prediction is Real, words are those contributing to Real (Green).
+                    const verdictColor = data.detection.final_verdict.toLowerCase() === 'fake' ? '#ff2e63' : '#00fff5';
+                    return `<span style="background: ${verdictColor}20; color: ${verdictColor}; padding: 5px 10px; border-radius: 15px; font-size: 0.9rem; font-weight: 600; border: 1px solid ${verdictColor};">${w.word} (${w.score.toFixed(2)})</span>`;
+                }).join('');
+            } else {
+                explanationSection.style.display = 'none';
+            }
+
+
+            // Verdict banner
+            const verdictBanner = document.getElementById('verdict-banner');
+            const verdictIcon = document.getElementById('verdict-icon');
+            const verdictText = document.getElementById('verdict-text');
+            const verdictConfidence = document.getElementById('verdict-confidence');
+
+            if (verdict === 'Fake') {
+                verdictBanner.className = 'verdict-banner fake';
+                verdictIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                verdictText.textContent = 'LIKELY MISINFORMATION';
+            } else {
+                verdictBanner.className = 'verdict-banner real';
+                verdictIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                verdictText.textContent = 'LIKELY AUTHENTIC';
+            }
+
+            verdictConfidence.textContent = `Confidence: ${(bert.confidence * 100).toFixed(1)}%`;
+
+            // BERT results
+            document.getElementById('bert-badge').textContent = bert.prediction;
+            document.getElementById('bert-badge').className = `badge ${bert.prediction.toLowerCase()}`;
+            document.getElementById('bert-confidence').style.width = `${bert.confidence * 100}%`;
+            document.getElementById('bert-confidence-text').textContent = `${(bert.confidence * 100).toFixed(1)}%`;
+
+            // SVM results
+            document.getElementById('svm-badge').textContent = svm.prediction;
+            document.getElementById('svm-badge').className = `badge ${svm.prediction.toLowerCase()}`;
+            document.getElementById('svm-confidence').style.width = `${svm.confidence * 100}%`;
+            document.getElementById('svm-confidence-text').textContent = `${(svm.confidence * 100).toFixed(1)}%`;
+
+            // Propagation metrics
+            const propagation = data.propagation;
+            document.getElementById('severity-value').textContent = propagation.sir_model.severity;
+            document.getElementById('r0-value').textContent = propagation.sir_model.r0.toFixed(2);
+            document.getElementById('reach-value').textContent =
+                `${propagation.sir_model.metrics.reach_percentage.toFixed(1)}%`;
+            document.getElementById('peak-value').textContent =
+                `Day ${propagation.sir_model.metrics.peak_day}`;
+
+            // Display charts (All are now interactive Plotly JSONs)
+            renderChart('chart-pie-fake-real', data.visualizations.pie_fake_real);
+            renderChart('chart-bar-comparison', data.visualizations.bar_model_comparison);
+            renderChart('chart-line-pipeline', data.visualizations.line_pipeline);
+            renderChart('chart-sir-model', data.visualizations.line_sir_model);
+            renderChart('chart-pie-influencers', data.visualizations.pie_influencers);
+
+            // Render 3D Graph
+            if (data.propagation.network_analysis.graph_data) {
+                const gData = data.propagation.network_analysis.graph_data;
+                const netData = {
+                    nodes: gData.nodes.map(n => ({ id: n.id, val: n.size, ...n })),
+                    links: gData.edges.map(e => ({ source: e.source, target: e.target }))
+                };
+
+                const graphElem = document.getElementById('3d-graph');
+                ForceGraph3D()(graphElem)
+                    .graphData(netData)
+                    .nodeLabel('id')
+                    .nodeColor(node => data.detection.final_verdict === 'Fake' ? '#E74C3C' : '#DAF1DE')
+                    .nodeResolution(16)
+                    .linkDirectionalParticles(2)
+                    .linkDirectionalParticleSpeed(d => 0.005)
+                    .backgroundColor('rgba(0,0,0,0)')
+                    .width(graphElem.clientWidth)
+                    .height(graphElem.clientHeight);
+            } else {
+                renderChart('chart-network-graph', data.visualizations.network_graph);
+            }
+
+            // Trigger Deep Scan Typewriter
+            if (data.detection.deep_scan && data.detection.deep_scan.executive_summary) {
+                document.getElementById('deep-scan-section').style.display = 'block';
+                typeWriter(data.detection.deep_scan.executive_summary, 'deep-scan-text');
+            }
+        }
+
+        function renderChart(elementId, chartDataJson) {
+            try {
+                const chartData = JSON.parse(chartDataJson);
+                Plotly.newPlot(elementId, chartData.data, chartData.layout, { responsive: true, displayModeBar: false });
+            } catch (e) {
+                console.error(`Error rendering chart ${elementId}:`, e);
+            }
+        }
+
+        // Typewriter Effect for Deep Scan
+        function typeWriter(text, elementId, speed = 30) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            let i = 0;
+
+            // Cursor effect
+            element.style.borderRight = '2px solid #8EB69B';
+
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    element.style.borderRight = 'none'; // Remove cursor when done
+                }
+            }
+            type();
+        }
+    </script>
+</body>
+
+</html>

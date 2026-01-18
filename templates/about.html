@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - AI Misinformation Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Specific styles for About page content */
+        .about-section {
+            padding: 2rem;
+            color: #fff;
+        }
+
+        .about-section h1,
+        .about-section h2 {
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .about-section h2 {
+            margin-top: 2rem;
+            font-size: 1.8rem;
+        }
+
+        .about-section p {
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: #4ECDC4;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            margin-left: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #fff;
+        }
+
+        .nav-container {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Video Background -->
+    <div class="video-container">
+        <video autoplay muted loop id="bg-video">
+            <source src="{{ url_for('static', filename='asd.mp4') }}" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <a href="{{ url_for('index') }}" class="nav-link"><i class="fas fa-home"></i> Home</a>
+        <a href="{{ url_for('about') }}" class="nav-link active"><i class="fas fa-info-circle"></i> About</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>AI-Based Misinformation Propagation Analyzer</span>
+                </div>
+                <p class="subtitle">About the Project & Models</p>
+            </div>
+        </header>
+
+        <!-- About Content -->
+        <section class="about-section glass-card animate-enter delay-1">
+            <h1>Project Overview</h1>
+
+            <p>
+                The <strong>AI Misinformation Detection & Propagation Analysis System</strong> is a cutting-edge tool
+                designed to identify fake news and analyze how it spreads across social networks. By combining advanced
+                Natural Language Processing (NLP) with epidemiological models, this system provides a comprehensive view
+                of information authenticity and its potential impact.
+            </p>
+
+            <div class="feature-grid">
+                <div class="feature-card animate-enter delay-2">
+                    <div class="feature-icon"><i class="fas fa-robot"></i></div>
+
+                    <h3>BERT Model</h3>
+                    <p>
+                        We utilize <strong>Bidirectional Encoder Representations from Transformers (BERT)</strong>, a
+                        state-of-the-art language model developed by Google. BERT understands the context of words in
+                        search queries and text, allowing for highly accurate classification of news articles as "Real"
+                        or "Fake" based on semantic analysis rather than just keyword matching.
+                    </p>
+                </div>
+
+                <div class="feature-card animate-enter delay-3">
+                    <div class="feature-icon"><i class="fas fa-cog"></i></div>
+                    <h3>SVM Baseline</h3>
+
+                    <p>
+                        A <strong>Support Vector Machine (SVM)</strong> acts as our baseline model. While efficient and
+                        effective for text classification, it serves as a comparison point to demonstrate the superior
+                        performance of deep learning approaches like BERT in handling complex linguistic nuances.
+                    </p>
+                </div>
+
+                <div class="feature-card animate-enter delay-4">
+                    <div class="feature-icon"><i class="fas fa-virus"></i></div>
+                    <h3>SIR Propagation Model</h3>
+
+                    <p>
+                        To simulate how misinformation spreads, we adapt the <strong>Susceptible-Infected-Recovered
+                            (SIR)</strong> model from epidemiology.
+                    <ul>
+                        <li><strong>Susceptible</strong>: Users who haven't seen the news.</li>
+                        <li><strong>Infected</strong>: Users sharing the fake news.</li>
+                        <li><strong>Recovered</strong>: Users who identified it as fake and stopped sharing.</li>
+                    </ul>
+                    </p>
+                </div>
+
+                <div class="feature-card animate-enter delay-5">
+                    <div class="feature-icon"><i class="fas fa-project-diagram"></i></div>
+                    <h3>Network Analysis</h3>
+
+                    <p>
+                        We simulate social networks to identify key influencers and spread patterns. Our 3D
+                        visualization tools allow you to explore how information flows through user nodes, helping to
+                        identify "Super Spreaders" and potential intervention points to stop viral misinformation.
+                    </p>
+                </div>
+            </div>
+
+            <h2>Why It Matters</h2>
+            <p>
+                In an era of digital information overload, the ability to distinguish truth from fabrication is
+                critical. This project aims to empower users with AI-driven insights, making the invisible mechanisms of
+                misinformation visible and understandable.
+            </p>
+        </section>
+    </div>
+</body>
+
+</html>
