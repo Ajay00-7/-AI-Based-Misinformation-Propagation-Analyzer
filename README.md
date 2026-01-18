@@ -2,14 +2,17 @@
 
 <div align="center">
 
-**Final Year B.Tech Project - AI & Data Science**
+**AI & Data Science Project**
 
 ![Status](https://img.shields.io/badge/Status-Complete-success)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
 ![Flask](https://img.shields.io/badge/Flask-3.0.0-lightgrey)
 ![BERT](https://img.shields.io/badge/Model-BERT-orange)
 
+
 *A comprehensive web-based system for detecting misinformation and analyzing its propagation through social networks using advanced AI and epidemiological models.*
+
+[**🚀 Live Demo**](http://localhost:5000)
 
 </div>
 
@@ -488,81 +491,7 @@ All propagation analysis uses simulated networks. The system does not track real
 
 ---
 
-## 🎓 Viva Preparation Guide
 
-### **1. Project Overview Questions**
-
-**Q: What is the main objective of your project?**
-> Our project aims to combat misinformation by building an automated detection system using BERT and simulating its propagation using epidemiological models. We provide both detection (is it fake?) and impact analysis (how will it spread?).
-
-**Q: Why is this problem important?**
-> Misinformation influences elections, public health decisions, and social stability. Manual fact-checking can't scale with content volume. Automated AI-based detection is essential for information integrity in the digital age.
-
-**Q: What makes your approach unique?**
-> We combine three domains: (1) State-of-the-art NLP with BERT, (2) Epidemiological modeling from public health, and (3) Network science. This holistic approach enables both detection and impact prediction.
-
-### **2. Technical Deep-Dive Questions**
-
-**Q: Explain BERT architecture**
-> BERT uses transformer architecture with bidirectional attention. It processes text in both directions simultaneously, unlike traditional left-to-right models. It's pre-trained on 340M Wikipedia + BooksCorpus words using masked language modeling and next sentence prediction. For our task, we fine-tune the [CLS] token representation through a classification head.
-
-**Q: Why BERT over simpler models?**
-> BERT captures contextual nuances essential for detecting misinformation. For example, "Doctors hate this trick" in fake news vs "Doctors recommend this treatment" in real news – BERT understands context, not just keywords.
-
-**Q: How does the SIR model work?**
-> SIR divides population into three compartments: Susceptible (S), Infected/Sharing (I), and Recovered/Stopped (R). We solve differential equations that model transitions: S→I at rate β (infection), I→R at rate γ (recovery). This models how information spreads like a disease.
-
-**Q: Why use SIR for information diffusion?**
-> Research shows information spread follows epidemic patterns. Key parallel: Infected individuals "transmit" information through social contacts, similar to disease transmission. This model is validated by empirical studies of viral content.
-
-**Q: How do you identify influencers?**
-> We calculate three centrality metrics: Degree (connection count), Betweenness (bridging power), and Closeness (reach efficiency). Our influencer score is weighted combination: 50% degree, 30% betweenness, 20% closeness. This identifies users who can accelerate spread.
-
-### **3. Implementation Questions**
-
-**Q: What's your tech stack?**
-> Backend: Python with Flask for REST API. Models: HuggingFace Transformers (BERT), scikit-learn (SVM), NetworkX (graphs), SciPy (SIR solver). Frontend: Vanilla HTML/CSS/JS with Plotly for interactive charts.
-
-**Q: How do you handle URL analysis?**
-> We use requests library to fetch content and BeautifulSoup to parse HTML. We extract text from <p> tags, remove scripts/styles/navigation, clean whitespace, then pass to detection models.
-
-**Q: What's the inference pipeline?**
-> Input → Validation → BERT tokenization → Model inference → SVM parallel inference → Consensus → SIR simulation → Network diffusion → Visualization generation → JSON response → Frontend rendering.
-
-**Q: How long does analysis take?**
-> Total: ~6-7 seconds. Breakdown: BERT (2-3s), SVM (0.1s), SIR (0.5s), Network (1s), Visualization (2s). BERT is bottleneck; GPU acceleration reduces to <1s.
-
-### **4. Results & Evaluation Questions**
-
-**Q: What accuracy did you achieve?**
-> BERT: 87% accuracy, F1=0.87. SVM baseline: 75% accuracy, F1=0.75. BERT outperforms by 12 percentage points, validating deep learning approach.
-
-**Q: How did you evaluate your model?**
-> We split dataset 80-20 (train-test), used stratified sampling to maintain class balance. Evaluated on accuracy, precision, recall, F1-score. For propagation, we validated R0 values against literature on viral content.
-
-**Q: What challenges did you face?**
-> Main challenges: (1) BERT computational requirements (solved with CPU inference, ~3s), (2) Network visualization performance (used Plotly for interactivity), (3) Dataset size (used synthetic + augmentation for demo; real deployment needs larger corpus).
-
-### **5. Ethics & Limitations Questions**
-
-**Q: What are ethical considerations?**
-> We don't track real users or access private data. All propagation analysis uses simulated networks. The system is educational – it should complement human judgment, not replace it. False positives could suppress legitimate speech, so human review is essential.
-
-**Q: What are the limitations?**
-> (1) Training data: Limited synthetic dataset; production needs millions of labeled examples. (2) Language: English only currently. (3) Multimodal: Only text, ignores images/videos. (4) Adversarial: Sophisticated attackers can fool the model. (5) Context: May miss sarcasm, satire, or cultural nuances.
-
-**Q: How can your project be misused?**
-> Potential misuses: Censorship of legitimate content, surveillance, propaganda detection evasion research. Mitigations: Human-in-the-loop, transparency in decision-making, open-source for auditing, ethical guidelines for deployment.
-
-### **6. Future Work Questions**
-
-**Q: How would you improve this?**
-> Priority improvements: (1) Larger labeled dataset from LIAR/FEVER/FakeNewsNet, (2) Multimodal analysis with image/video, (3) Explainable AI to show why content is flagged, (4) Real-time streaming for social media monitoring, (5) Multilingual support with mBERT.
-
-**Q: Can this scale to social media?**
-> Yes, with modifications: (1) Distributed architecture (microservices, message queues), (2) GPU clusters for parallel inference, (3) Content hashing to avoid reprocessing, (4) Incremental network updates, (5) Approximate algorithms for large graphs (sampling, sketching).
-
----
 
 ## 🛠️ Installation & Setup
 
@@ -666,7 +595,7 @@ Click "**Fake News Sample**" or "**Real News Sample**" to load pre-configured ex
 
 ## 🤝 Contributing
 
-This is a final-year academic project. Contributions for educational purposes are welcome:
+Contributions for educational purposes are welcome:
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/improvement`)
@@ -678,13 +607,13 @@ This is a final-year academic project. Contributions for educational purposes ar
 
 ## 📄 License
 
-This project is created for academic purposes as a final-year B.Tech project in AI & Data Science.
+This project is created for academic purposes.
 
 ---
 
 ## 👨‍💻 Author
 
-**Final Year B.Tech Student - AI & Data Science**
+**AI & Data Science Student**
 
 *This project demonstrates integration of NLP, machine learning, network science, and web development for social good.*
 
