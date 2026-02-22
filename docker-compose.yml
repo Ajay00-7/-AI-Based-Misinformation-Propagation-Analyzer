@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # 1. API Gateway / App Service
+  api_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: misinformation-api:latest
+    container_name: ml_inference_api
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis_cache:6379/0
+      - DATABASE_URL=postgresql://user:password@pg_database:5432/misinfo_db
+      - ENVIRONMENT=production
+      - LOG_LEVEL=info
+    depends_on:
+      redis_cache:
+        condition: service_healthy
+      pg_database:
+        condition: service_healthy
+    networks:
+      - internal_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G # BERT/DeBERTa requires significant memory during inference
+
+  # 2. Redis Cache (Rate Limiting & Session State)
+  redis_cache:
+    image: redis:7.2-alpine
+    container_name: auth_redis_cache
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # 3. PostgreSQL Database (User Accounts & Billing)
+  pg_database:
+    image: postgres:15-alpine
+    container_name: billing_postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: misinfo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - internal_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d misinfo_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # 4. Optional Vector DB placeholder (e.g., Qdrant / Milvus for RAG)
+  vector_db:
+    image: qdrant/qdrant:latest
+    container_name: rag_vector_db
+    ports:
+      - "6333:6333"
+    volumes:
+      - vector_data:/qdrant/storage
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  pg_data:
+  vector_data:

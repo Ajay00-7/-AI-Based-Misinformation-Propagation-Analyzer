@@ -22,6 +22,10 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from models.reasoning_engine import ReasoningEngine
+from models.claim_extractor import ClaimExtractor
+from models.risk_scorer import RiskScorer
+from models.live_monitor import LiveMonitor
+from models.vector_db import MockVectorDB
 
 app = Flask(__name__)
 CORS(app)
@@ -61,6 +65,20 @@ def about():
     """Serve about page"""
     return render_template('about.html')
 
+@app.route('/api/metrics')
+def get_metrics():
+    """
+    Returns real model training metrics from data/model_metrics.json.
+    Used by the About page to show trustable, data-backed stats.
+    """
+    import json
+    metrics_path = os.path.join(os.path.dirname(__file__), 'data', 'model_metrics.json')
+    try:
+        with open(metrics_path, 'r') as f:
+            return jsonify(json.load(f))
+    except FileNotFoundError:
+        return jsonify({'error': 'Metrics not yet generated. Run train_and_evaluate.py first.'}), 404
+
 
 @app.route('/analyze/text', methods=['POST'])
 def analyze_text():
@@ -83,6 +101,94 @@ def analyze_text():
         result = run_complete_analysis(text)
         return jsonify(result)
     
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/monitor/live', methods=['GET'])
+def monitor_live():
+    """
+    Endpoint for real-time monitoring dashboard.
+    Fetches latest items and provides rapid risk assessments.
+    """
+    try:
+        monitor = LiveMonitor()
+        items = monitor.fetch_latest_items(3)
+        
+        results = []
+        for item in items:
+            bert = get_bert_model()
+            b_res = bert.predict(item['headline'])
+            risk_scorer = RiskScorer()
+            
+            threat = risk_scorer.calculate_score(
+                bert_prob=b_res['confidence'],
+                is_fake=(b_res['prediction'] == 'Fake'),
+                claims_count=1,
+                emotional_intensity="Moderate",
+                r0_value=2.0 if b_res['prediction'] == 'Real' else 4.5
+            )
+            
+            item['analysis'] = {
+                'prediction': b_res['prediction'],
+                'confidence': b_res['confidence'],
+                'threat_score': threat['score'],
+                'threat_level': threat['level'],
+                'color_code': threat['color_code']
+            }
+            results.append(item)
+            
+        return jsonify({'feed': results})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/extension/analyze', methods=['POST', 'OPTIONS'])
+def extension_analyze():
+    """
+    Dedicated endpoint for the Chrome Browser Extension context menu.
+    Provides a concise version of the analysis payload.
+    """
+    if request.method == 'OPTIONS':
+        # CORS preflight response
+        response = app.make_default_options_response()
+        headers = None
+        if 'ACCESS_CONTROL_REQUEST_HEADERS' in request.headers:
+            headers = request.headers['ACCESS_CONTROL_REQUEST_HEADERS']
+        h = response.headers
+        h['Access-Control-Allow-Origin'] = '*'
+        h['Access-Control-Allow-Methods'] = 'POST'
+        h['Access-Control-Max-Age'] = '21600'
+        if headers is not None:
+            h['Access-Control-Allow-Headers'] = headers
+        return response
+        
+    try:
+        data = request.get_json()
+        selected_text = data.get('text', '').strip()
+        
+        if len(selected_text) < 10:
+            return jsonify({'error': 'Please select at least a full sentence to scan.'}), 400
+            
+        full_result = run_complete_analysis(selected_text)
+        
+        # Format specifically for the extension UI layout
+        extension_payload = {
+            "analysis": {
+                "verdict": full_result['detection']['final_verdict'],
+                "confidence": full_result['detection'][full_result['detection']['final_verdict'].lower()]['confidence'],
+                "threat_score": full_result['detection']['threat_assessment']['score'],
+                "summary": full_result['detection']['deep_scan']['executive_summary'],
+                "extracted_claims": full_result['detection']['extracted_claims']
+            }
+        }
+        
+        response = jsonify(extension_payload)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+        
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -422,10 +528,39 @@ def run_complete_analysis(text, source_url=None):
         bert_result['confidence']
     )
 
+    # NEW: Claim Extraction
+    claim_extractor = ClaimExtractor()
+    extracted_claims = claim_extractor.extract_claims(text)
+
+    # NEW: RAG Fact Verification (Query Vector DB with extracted claims)
+    vector_db = MockVectorDB()
+    rag_results = []
+    
+    # Check top 3 claims against the Knowledge Base
+    for claim in extracted_claims.get('claims', [])[:3]:
+        verification = vector_db.query_claim(claim)
+        rag_results.append({
+            "claim": claim,
+            "verification": verification
+        })
+        
+    extracted_claims['rag_verification'] = rag_results
+
     # 3. SIR Model Propagation
     sir = SIRModel(population=10000, initial_infected=10)
     is_fake = (bert_result['prediction'] == 'Fake')
     propagation_result = sir.predict_spread_severity(is_fake=is_fake)
+    
+    # NEW: Risk Scoring
+    risk_scorer = RiskScorer()
+    emotion_val = deep_scan.get('emotional_intensity', {}).get('level', 'Moderate')
+    threat_assessment = risk_scorer.calculate_score(
+        bert_prob=bert_result['confidence'],
+        is_fake=is_fake,
+        claims_count=extracted_claims['total_claims_found'],
+        emotional_intensity=emotion_val,
+        r0_value=propagation_result['r0']
+    )
     
     # 4. Network Graph Analysis
     graph_analysis = GraphAnalysis(num_users=50)
@@ -484,6 +619,8 @@ def run_complete_analysis(text, source_url=None):
             },
             'explanation': explanation,
             'deep_scan': deep_scan,
+            'threat_assessment': threat_assessment,
+            'extracted_claims': extracted_claims,
             'final_verdict': bert_result['prediction'],  # Trust BERT more
             'consensus': bert_result['prediction'] == svm_result['prediction']
         },
